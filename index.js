@@ -19,5 +19,3 @@ async function loadRunModel(){
 }
 
 loadRunModel();
-//let output = runModel(model);
-
