@@ -18,15 +18,15 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-var MODEL_URL = 'fastdepth_opset11_tfjs/model.json';
+var MODEL_URL = 'fastdepth_opset9_tfjs/model.json';
 
-function loadModel() {
-  return _loadModel.apply(this, arguments);
+function loadRunModel() {
+  return _loadRunModel.apply(this, arguments);
 }
 
-function _loadModel() {
-  _loadModel = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-    var handler, model;
+function _loadRunModel() {
+  _loadRunModel = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+    var handler, model, input, output;
     return regeneratorRuntime.wrap(function _callee$(_context) {
       while (1) {
         switch (_context.prev = _context.next) {
@@ -38,15 +38,24 @@ function _loadModel() {
           case 3:
             model = _context.sent;
             console.log("Model loaded");
+            input = tf.ones([1, 3, 480, 640], 'float32');
+            _context.next = 8;
+            return model.execute(input);
 
-          case 5:
+          case 8:
+            output = _context.sent;
+            console.log(output);
+            output.print();
+            console.log("Model run");
+
+          case 12:
           case "end":
             return _context.stop();
         }
       }
     }, _callee);
   }));
-  return _loadModel.apply(this, arguments);
+  return _loadRunModel.apply(this, arguments);
 }
 
-loadModel();
+loadRunModel(); //let output = runModel(model);
