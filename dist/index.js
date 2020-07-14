@@ -4,6 +4,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 require("regenerator-runtime/runtime.js");
 
+var fs = _interopRequireWildcard(require("fs"));
+
 var tfnode = _interopRequireWildcard(require("@tensorflow/tfjs-node"));
 
 var tf = _interopRequireWildcard(require("@tensorflow/tfjs"));
@@ -18,44 +20,99 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-var MODEL_URL = 'fastdepth_opset9_tfjs/model.json';
+var MODEL_URL = 'fastdepth_opset9_v2_tfjs/model.json';
 
-function loadRunModel() {
-  return _loadRunModel.apply(this, arguments);
-}
+var readImage = function readImage(path) {
+  var imageBuffer = fs.readFileSync(path);
+  var tfimage = tfnode.node.decodeImage(imageBuffer);
+  return tfimage;
+};
 
-function _loadRunModel() {
-  _loadRunModel = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-    var handler, model, input, output;
+var getTestImage = /*#__PURE__*/function () {
+  var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+    var image, reshaped_image, big_image, float_img;
     return regeneratorRuntime.wrap(function _callee$(_context) {
       while (1) {
         switch (_context.prev = _context.next) {
           case 0:
-            handler = tfnode.io.fileSystem(MODEL_URL);
-            _context.next = 3;
-            return tf.loadGraphModel(handler);
+            image = readImage("224x224-sample.jpg");
+            console.log(image.shape);
+            reshaped_image = tf.transpose(image, [2, 0, 1]);
+            big_image = reshaped_image.reshape([1, 3, 224, 224]);
+            float_img = big_image.asType('float32');
+            return _context.abrupt("return", float_img.div(255));
 
-          case 3:
-            model = _context.sent;
-            console.log("Model loaded");
-            input = tf.ones([1, 3, 480, 640], 'float32');
-            _context.next = 8;
-            return model.execute(input);
-
-          case 8:
-            output = _context.sent;
-            console.log(output);
-            output.print();
-            console.log("Model run");
-
-          case 12:
+          case 6:
           case "end":
             return _context.stop();
         }
       }
     }, _callee);
   }));
-  return _loadRunModel.apply(this, arguments);
-}
 
-loadRunModel(); //let output = runModel(model);
+  return function getTestImage() {
+    return _ref.apply(this, arguments);
+  };
+}();
+
+var loadRunModel = /*#__PURE__*/function () {
+  var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
+    var handler, model, input, output, raw, outReshape, outResize, fileOut, fileOutPath;
+    return regeneratorRuntime.wrap(function _callee2$(_context2) {
+      while (1) {
+        switch (_context2.prev = _context2.next) {
+          case 0:
+            handler = tfnode.io.fileSystem(MODEL_URL);
+            _context2.next = 3;
+            return tf.loadGraphModel(handler);
+
+          case 3:
+            model = _context2.sent;
+            console.log("Model loaded");
+            _context2.next = 7;
+            return getTestImage();
+
+          case 7:
+            input = _context2.sent;
+            _context2.next = 10;
+            return model.predict(input);
+
+          case 10:
+            output = _context2.sent;
+            console.log(output);
+            output.print();
+            console.log("Model run");
+            _context2.next = 16;
+            return output.array();
+
+          case 16:
+            raw = _context2.sent;
+            fs.writeFileSync('raw-depth.txt', raw);
+            outReshape = tf.transpose(output, [2, 3, 1, 0]).reshape([224, 224, 1]);
+            console.log(tf.max(outReshape));
+            outResize = tf.mul(tf.div(outReshape, tf.max(outReshape)), 255).asType('int32');
+            outResize.print();
+            _context2.next = 24;
+            return tfnode.node.encodeJpeg(outResize, 'grayscale');
+
+          case 24:
+            fileOut = _context2.sent;
+            console.log(fileOut);
+            fileOutPath = "output".concat(Date.now(), ".jpg");
+            fs.writeFileSync(fileOutPath, fileOut);
+            console.log("Output saved to ".concat(fileOutPath));
+
+          case 29:
+          case "end":
+            return _context2.stop();
+        }
+      }
+    }, _callee2);
+  }));
+
+  return function loadRunModel() {
+    return _ref2.apply(this, arguments);
+  };
+}();
+
+loadRunModel();

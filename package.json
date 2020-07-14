@@ -16,6 +16,7 @@
     "@babel/preset-env": "^7.10.4"
   },
   "dependencies": {
-    "@tensorflow/tfjs-node": "^2.0.1"
+    "@tensorflow/tfjs-node": "^2.0.1",
+    "matplotnode": "^0.4.2"
   }
 }
